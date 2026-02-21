@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Writing Mentor V17.5 - VIP Edition</title>
+    <style>
+        :root {
+            --primary: #58cc02;
+            --premium: #ffd700;
+            --bg: #f5f6fa;
+            --card-bg: #ffffff;
+            --text: #2f3640;
+            --accent: #667eea;
+        }
+
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; margin: 0; background: var(--bg); color: var(--text); transition: 0.5s; line-height: 1.6; }
+        
+        /* THEMES */
+        body.dark { --bg: #121212; --card-bg: #1e1e1e; --text: #f5f6fa; }
+        
+        /* VIP GLASS MODE */
+        body.glass {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+            background-attachment: fixed !important;
+            color: white !important;
+        }
+        body.glass .card {
+            background: rgba(255, 255, 255, 0.12) !important;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white !important;
+        }
+        body.glass input, body.glass textarea, body.glass select {
+            background: rgba(255, 255, 255, 0.1);
+            color: white; border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .container { max-width: 1100px; margin: auto; padding: 20px; }
+        .card { background: var(--card-bg); padding: 25px; border-radius: 20px; margin-bottom: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); transition: 0.3s; }
+        
+        /* UI ELEMENTS */
+        input, textarea, select { width: 100%; padding: 12px; margin: 10px 0; border-radius: 10px; border: 1px solid #ddd; box-sizing: border-box; }
+        button { padding: 12px 20px; border: none; border-radius: 12px; cursor: pointer; font-weight: bold; transition: 0.3s; }
+        .btn-main { background: var(--primary); color: white; width: 100%; }
+        .btn-vip { background: linear-gradient(45deg, #ffd700, #ffa500); color: #000; width: 100%; }
+        .locked { opacity: 0.5; cursor: not-allowed; }
+
+        /* DASHBOARD */
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin: 20px 0; }
+        .stat-item { text-align: center; padding: 15px; background: rgba(0,0,0,0.03); border-radius: 15px; }
+        .progress-container { background: #eee; height: 10px; border-radius: 5px; overflow: hidden; margin: 10px 0; }
+        .progress-bar { background: var(--primary); height: 100%; width: 0%; transition: 0.5s; }
+
+        .rubric-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 15px; }
+        .rubric-item { padding: 10px; border-left: 4px solid var(--primary); background: rgba(88, 204, 2, 0.1); border-radius: 5px; }
+        
+        .vip-badge { background: var(--premium); color: black; padding: 2px 6px; border-radius: 5px; font-size: 0.7em; margin-left: 5px; }
+        .grid-layout { display: grid; grid-template-columns: 2fr 1fr; gap: 20px; }
+    </style>
+</head>
+<body>
+
+<div id="authPage" class="container" style="max-width: 400px; margin-top: 100px;">
+    <div class="card" style="text-align: center;">
+        <h2>🔐 AI Writing Mentor</h2>
+        <input id="userIn" placeholder="Username">
+        <input id="passIn" type="password" placeholder="Password">
+        <button class="btn-main" onclick="auth('login')">Đăng nhập</button>
+        <button style="background:none; color:gray;" onclick="auth('reg')">Đăng ký tài khoản</button>
+    </div>
+</div>
+
+<div id="mainPage" class="container" style="display:none;">
+    <div class="card">
+        <div style="display:flex; justify-content: space-between;">
+            <h2 id="helloUser">Chào User</h2>
+            <button onclick="logout()" style="background:#ff4757; color:white;">Thoát</button>
+        </div>
+        <div class="stats-grid">
+            <div class="stat-item">💰 <span id="userCoins">0</span> Xu</div>
+            <div class="stat-item">🏆 Cấp <span id="userLvl">1</span></div>
+            <div class="stat-item">📝 <span id="userTotal">0</span> Bài</div>
+        </div>
+        <div class="progress-container"><div id="xpBar" class="progress-bar"></div></div>
+    </div>
+
+    <div class="grid-layout">
+        <div>
+            <div class="card">
+                <h3>🧠 Academic AI Judge</h3>
+                <textarea id="essayInput" placeholder="Dán bài luận (tối thiểu 30 từ)..." style="height:200px;"></textarea>
+                <button class="btn-main" onclick="judgeEssay()">PHÂN TÍCH HỌC THUẬT</button>
+                <div id="analysisResult"></div>
+            </div>
+            <div class="card">
+                <h3>📜 Lịch sử bài viết</h3>
+                <div id="historyList"></div>
+            </div>
+        </div>
+
+        <div>
+            <div class="card">
+                <h3>💎 Tài khoản VIP</h3>
+                <div id="vipStatus">Trạng thái: Thường</div>
+                <button id="vipBtn" class="btn-vip" onclick="buyVip()">Nâng cấp VIP (500 Xu)</button>
+            </div>
+
+            <div class="card">
+                <h3>🛒 Music Store</h3>
+                <div id="storeItems"></div>
+                <hr>
+                <h3>🎵 Trình phát nhạc</h3>
+                <select id="musicSelect" onchange="playMusic()"></select>
+                <audio id="player" controls loop style="width:100%; margin-top:10px;"></audio>
+                
+                <div id="vipUpload" style="display:none; margin-top:10px;">
+                    <p style="font-size:0.8em; color:gold;">🌟 VIP: Upload nhạc từ máy</p>
+                    <input type="file" id="localMusic" accept="audio/*">
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>🎨 Theme Hệ thống</h3>
+                <button onclick="setTheme('default')" style="width:100%; margin-bottom:5px;">Sáng</button>
+                <button onclick="setTheme('dark')" style="width:100%; margin-bottom:5px; background:#333; color:white;">Tối</button>
+                <button id="glassBtn" onclick="setTheme('glass')" class="locked" style="width:100%; background:purple; color:white;">VIP Glass Mode</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let users = JSON.parse(localStorage.getItem('guru_v17_final')) || {};
+    let cur = null;
+
+    const tracks = [
+        {id: 'f1', name: 'Free Track 1', price: 0, url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3'},
+        {id: 'p1', name: 'Focus Deep', price: 100, url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3'},
+        {id: 'p2', name: 'LoFi Study', price: 120, url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-8.mp3'}
+    ];
+
+    const tips = [
+        {t: "Khuyến nghị tích hợp Câu đảo ngữ (Inversion) để tạo điểm nhấn.", b: "Learning is important.", a: "Rarely do people realize how important learning is."},
+        {t: "Sử dụng từ nối Academic (Consequently, Furthermore).", b: "It is raining so I stay home.", a: "It is raining; consequently, I shall remain indoors."}
+    ];
+
+    function auth(type) {
+        let u = userIn.value, p = passIn.value;
+        if(!u || !p) return alert("Vui lòng nhập đủ!");
+        if(type==='reg') {
+            if(users[u]) return alert("User đã tồn tại!");
+            users[u] = {pass:p, coins:600, lvl:1, xp:0, history:[], items:['f1'], isVip:false, total:0, theme:'default'};
+            alert("Đăng ký thành công! Bạn nhận được 600 xu trải nghiệm.");
+        } else {
+            if(users[u] && users[u].pass === p) { cur = u; updateUI(); }
+            else alert("Sai thông tin!");
+        }
+        save();
+    }
+
+    function judgeEssay() {
+        let txt = essayInput.value.trim();
+        let words = txt.split(/\s+/).filter(w => w.length > 0);
+        if(words.length < 30) return alert("Yêu cầu tối thiểu 30 từ!");
+
+        let user = users[cur];
+        let score = Math.floor(Math.random() * 40) + 55; // Giả lập chấm điểm
+        user.total++; user.xp += 40;
+
+        if(score < 50 && !user.isVip) { user.coins -= 20; alert("Điểm thấp: -20 xu!"); }
+        else { user.coins += 25; }
+
+        if(user.xp >= 100) { user.lvl++; user.xp = 0; }
+        
+        user.history.unshift({s: score, w: words.length, t: new Date().toLocaleTimeString()});
+        
+        let randomTip = tips[Math.floor(Math.random() * tips.length)];
+        analysisResult.innerHTML = `
+            <div class="rubric-grid">
+                <div class="rubric-item">Điểm số: ${score}/100</div>
+                <div class="rubric-item">Từ vựng: Tốt</div>
+            </div>
+            <div style="background:rgba(255,255,0,0.1); padding:10px; margin-top:10px; border-radius:10px;">
+                <b>💡 Gợi ý:</b> ${randomTip.t}<br>
+                <small style="color:red">✘: ${randomTip.b}</small><br>
+                <small style="color:green">✔: ${randomTip.a}</small>
+            </div>
+        `;
+        updateUI(); save();
+    }
+
+    function buyVip() {
+        let u = users[cur];
+        if(u.coins >= 500) {
+            u.coins -= 500; u.isVip = true;
+            alert("💎 CHÚC MỪNG! Bạn đã là VIP Premium.");
+            updateUI(); save();
+        } else alert("Thiếu xu!");
+    }
+
+    function updateUI() {
+        if(!cur) return;
+        let u = users[cur];
+        document.getElementById('authPage').style.display = 'none';
+        document.getElementById('mainPage').style.display = 'block';
+        
+        helloUser.innerHTML = cur + (u.isVip ? '<span class="vip-badge">VIP</span>' : '');
+        userCoins.innerText = u.coins;
+        userLvl.innerText = u.lvl;
+        userTotal.innerText = u.total;
+        xpBar.style.width = u.xp + "%";
+        
+        // Music UI
+        storeItems.innerHTML = tracks.map(t => {
+            let owned = u.items.includes(t.id);
+            return `<div style="display:flex; justify-content:space-between; margin-bottom:5px;">
+                <span>${t.name}</span>
+                <button onclick="buyTrack('${t.id}',${t.price})" ${owned?'disabled':''}>${owned?'Đã có':t.price+' xu'}</button>
+            </div>`;
+        }).join('');
+
+        musicSelect.innerHTML = tracks.filter(t => u.items.includes(t.id))
+            .map(t => `<option value="${t.url}">${t.name}</option>`).join('');
+
+        // Theme & VIP features
+        vipStatus.innerText = u.isVip ? "Trạng thái: VIP Premium" : "Trạng thái: Thường";
+        vipBtn.style.display = u.isVip ? "none" : "block";
+        vipUpload.style.display = u.isVip ? "block" : "none";
+        glassBtn.className = u.isVip ? "" : "locked";
+        
+        document.body.className = u.theme;
+        
+        historyList.innerHTML = u.history.map(h => `<div style="font-size:0.8em; border-bottom:1px solid #ddd;"> Bài: ${h.s}đ | ${h.w} từ | ${h.t}</div>`).join('');
+    }
+
+    function buyTrack(id, price) {
+        let u = users[cur];
+        if(u.coins >= price) { u.coins -= price; u.items.push(id); updateUI(); save(); }
+    }
+
+    function setTheme(t) {
+        if(t === 'glass' && !users[cur].isVip) return alert("Cần VIP!");
+        users[cur].theme = t; document.body.className = t; save();
+    }
+
+    function playMusic() { player.src = musicSelect.value; player.play(); }
+    function save() { localStorage.setItem('guru_v17_final', JSON.stringify(users)); }
+    function logout() { location.reload(); }
+
+    localMusic.onchange = (e) => {
+        if(users[cur].isVip) { player.src = URL.createObjectURL(e.target.files[0]); player.play(); }
+    };
+</script>
+</body>
+</html>
